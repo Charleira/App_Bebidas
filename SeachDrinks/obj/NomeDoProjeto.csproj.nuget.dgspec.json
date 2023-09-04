@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\cadup\\app_bebidas\\NomeDoProjeto\\NomeDoProjeto.csproj": {}
+    "c:\\Users\\cadup\\app_bebidas\\SeachDrinks\\NomeDoProjeto.csproj": {}
   },
   "projects": {
-    "C:\\Users\\cadup\\app_bebidas\\NomeDoProjeto\\NomeDoProjeto.csproj": {
+    "c:\\Users\\cadup\\app_bebidas\\SeachDrinks\\NomeDoProjeto.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\cadup\\app_bebidas\\NomeDoProjeto\\NomeDoProjeto.csproj",
+        "projectUniqueName": "c:\\Users\\cadup\\app_bebidas\\SeachDrinks\\NomeDoProjeto.csproj",
         "projectName": "NomeDoProjeto",
-        "projectPath": "C:\\Users\\cadup\\app_bebidas\\NomeDoProjeto\\NomeDoProjeto.csproj",
+        "projectPath": "c:\\Users\\cadup\\app_bebidas\\SeachDrinks\\NomeDoProjeto.csproj",
         "packagesPath": "C:\\Users\\cadup\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\cadup\\app_bebidas\\NomeDoProjeto\\obj\\",
+        "outputPath": "c:\\Users\\cadup\\app_bebidas\\SeachDrinks\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
