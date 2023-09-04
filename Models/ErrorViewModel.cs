@@ -1,4 +1,4 @@
-namespace NomeDoProjeto.Models;
+namespace SearchDrinks.Models;
 
 public class ErrorViewModel
 {

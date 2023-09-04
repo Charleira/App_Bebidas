@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using NomeDoProjeto.Models;
+using SearchDrinks.Models;
 
-namespace NomeDoProjeto.Controllers;
+namespace SearchDrinks.Controllers;
 
 public class HomeController : Controller
 {
