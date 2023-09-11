@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro</title>
+    <link rel='stylesheet' href='/stylesheets/styled.css' />
+</head>
+
+<style>
+    /* ... Your existing CSS styles ... */
+</style>
+<body>
+    <!-- Formulário para cadastro -->
+    <div class="box">
+        <form action="../routes/authRoutes.js/register" method="POST">
+            <fieldset>
+                <legend><b>Cadastro</b></legend>
+                <br>
+                <div class="inputBox">
+                    <label for="name"><b>Nome</b></label>
+                    <input name="nome" type="text" class="inputUser" id="name" required /><br />
+                </div>
+                <br>
+                <div class="inputBox">
+                    <label for="email"><b>E-mail</b></label>
+                    <input name="email" type="text" class="inputUser" id="email" required /><br />
+                </div>
+                <br>
+                <div class="inputBox">
+                    <label for="password"><b>Senha</b></label>
+                    <input name="senha" type="password" class="inputUser" id="password" required /><br />
+                </div>
+                <br>
+                <div class="inputBox">
+                    <label for="confirmpassword"><b>Confimar senha</b></label>
+                    <input name="confirmpassword" type="password" class="inputUser" id="confirmpassword" required /><br />
+                </div>
+                <br>
+                <div class="inputBox">
+                    <label for="endereco"><b>Endereço</b></label>
+                    <input name="endereco" type="text" class="inputUser" id="endereco" required /><br />
+                </div>
+                <br>
+                <div class="inputBox">
+                    <label for="telefone"><b>Telefone</b></label>
+                    <input name="telefone" type="text" class="inputUser" id="telefone" required /><br />
+                </div>
+                <br>
+                <input type="submit" value="Cadastrar" />
+            </fieldset>
+        </form>
+    </div>
+</body>
+</html>
