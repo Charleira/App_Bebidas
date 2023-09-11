@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const { pool } = require('../db'); // Assuming you have a database connection pool in a separate file
+const { pool } = require('./app'); // Assuming you have a database connection pool in a separate file
 
 // Private Route
 router.get("/:id", checkToken, async (req, res) => {

@@ -3,12 +3,13 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const { pool } = require('../app'); // Assuming you have a database connection pool in a separate file
+const { pool, connection } = require('./db'); // Assuming you have a database connection pool in a separate file
 
 // Register User
 router.post('/register', async (req, res) => {
     const { nome, email, senha, confirmpassword, endereco, telefone } = req.body;
 
+    console.log(req.body)
     if (!email.includes("@") && !email.includes(".")) {
         return res.status(422).json({ msg: 'Insira um email válido' });
     }
@@ -31,7 +32,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if user exists
-    const [userRows] = await pool.promise().query('SELECT * FROM users WHERE email = ?', [email]);
+    const [userRows] = await connection.promise().query('SELECT * FROM usuarios WHERE email = ?', [email]);
     const userExists = userRows[0];
 
     if (userExists) {
@@ -44,7 +45,7 @@ router.post('/register', async (req, res) => {
 
     // Create user
     try {
-        await pool.promise().query('INSERT INTO users (nome, email, senha, endereco, telefone) VALUES (?, ?, ?, ?, ?)', [nome, email, passwordHash, endereco, telefone]);
+        await connection.promise().query('INSERT INTO usuarios (nome, email, senha, endereco, telefone) VALUES (?, ?, ?, ?, ?)', [nome, email, passwordHash, endereco, telefone]);
         res.redirect('');
     } catch (error) {
         console.log(error);
@@ -58,7 +59,7 @@ router.post('/register', async (req, res) => {
 router.post('/recovery', async (req, res) => {
     let email = req.body.email;
 
-    const [userRows] = await pool.promise().query('SELECT * FROM users WHERE email = ?', [email]);
+    const [userRows] = await pool.promise().query('SELECT * FROM usuarios WHERE email = ?', [email]);
     const user = userRows[0];
 
     if (!user) {
@@ -102,7 +103,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Check if user exists
-    const [userRows] = await pool.promise().query('SELECT * FROM users WHERE email = ?', [email]);
+    const [userRows] = await pool.promise().query('SELECT * FROM usuarios WHERE email = ?', [email]);
     const user = userRows[0];
 
     if (!user) {
