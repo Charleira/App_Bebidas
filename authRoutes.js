@@ -55,79 +55,97 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// Recovery Password
+// Rota para iniciar o processo de recuperação de senha
 router.post('/recovery', async (req, res) => {
-    let email = req.body.email;
+    const email = req.body.email;
 
-    const [userRows] = await pool.promise().query('SELECT * FROM usuarios WHERE email = ?', [email]);
-    const user = userRows[0];
+    try {
+        // Buscar o ID do usuário pelo email
+        const [userRows] = await connection.promise().query('SELECT id FROM usuarios WHERE email = ?', [email]);
+        const user = userRows[0];
 
-    if (!user) {
-        return res.status(404).json({ msg: 'Usuário não encontrado' });
-    } else {
-        var message = {
-            from: process.env.SMTP_USERNAME,
-            to: email,
-            subject: `Recuperação de Senha`,
-            text: "",
-            html: `
-                <div>
-                    <h1>Recuperação de Senha</h1>
-                    <h2>Senha de recuperação atual: ${user.password}</h2>
-                </div>`
-        };
+        if (!user) {
+            return res.status(404).json({ msg: 'Usuário não encontrado' });
+        }
 
-        smtpTransport.sendMail(message, (error, response) => {
-            if (error) {
-                console.log(error);
-            } else {
-                console.log("Email enviado: " + response.message);
-                smtpTransport.close();
-                res.redirect("../index.html");
-            }
-        });
+        // Redirecionar para a página de redefinição de senha com o ID na URL
+        res.redirect(`/NovaSenha.html?userId=${user.id}`);
+    } catch (error) {
+        console.error('Erro ao buscar o usuário:', error);
+        res.status(500).json({ msg: 'Ocorreu um erro ao buscar o usuário.' });
     }
 });
+// Update Password
+router.post('/passwordUpdate', async (req, res) => {
+    const { senha, confirmpassword } = req.body;
+    const userId = req.query.userId;
 
-// Login user
-router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-
-    // Validations
-    if (!email) {
-        return res.status(422).json({ msg: 'O email é obrigatório' });
-    }
-
-    if (!password) {
-        return res.status(422).json({ msg: 'A senha é obrigatória' });
-    }
-
-    // Check if user exists
-    const [userRows] = await pool.promise().query('SELECT * FROM usuarios WHERE email = ?', [email]);
-    const user = userRows[0];
-
-    if (!user) {
-        return res.status(404).json({ msg: 'Usuário não encontrado' });
-    }
-
-    // Check if password matches
-    const checkPassword = await bcrypt.compare(password, user.password);
-
-    if (!checkPassword) {
-        return res.status(404).json({ msg: 'Senha inválida' });
+    if (!senha || senha !== confirmpassword) {
+        return res.status(422).json({ msg: 'As senhas devem ser iguais' });
     }
 
     try {
+        // Verificar se a senha é a mesma que a senha atual
+        const [userRows] = await connection.execute('SELECT senha FROM usuarios WHERE id = ?', [userId]);
+
+        if (userRows.length === 0) {
+            return res.status(404).json({ msg: 'Usuário não encontrado' });
+        }
+
+        const user = userRows[0];
+
+        if (senha || null === user.senha) {
+            return res.status(200).json({ msg: 'A senha é a mesma, nenhum update necessário.' });
+        }
+
+        // Atualizar a senha
+        const result = await connection.execute('UPDATE usuarios SET senha = ? WHERE id = ?}}', [senha || null, userId ]);
+
+        if (result[0].affectedRows === 1) {
+            return res.status(200).json({ msg: 'Senha atualizada com sucesso' });
+        } else {
+            return res.status(404).json({ msg: 'Usuário não encontrado ou senha já é a atual.' });
+        }
+    } catch (error) {
+        console.error('Erro ao atualizar a senha no banco de dados:', error);
+        res.status(500).json({ msg: 'Ocorreu um erro ao atualizar a senha.' });
+    }
+});
+
+// Login User
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(422).json({ msg: 'E-mail e senha são obrigatórios' });
+    }
+
+    try {
+        // Verifique se o usuário existe
+        const [userRows] = await connection.promise().query('SELECT * FROM usuarios WHERE email = ?', [email]);
+        const user = userRows[0];
+
+        if (!user) {
+            return res.status(404).json({ msg: 'Usuário não encontrado' });
+        }
+
+        // Verifique se a senha corresponde
+        const checkPassword = await bcrypt.compare(password, user.senha);
+        if (!checkPassword) {
+            return res.status(404).json({ msg: 'Senha inválida' });
+        }
+
+        // Gere um token JWT
         const secret = process.env.SECRET;
         const token = jwt.sign({ id: user.id }, secret);
 
-        if (res.status(200)) {
-            res.redirect('./../bebidas.html');
-        }
-    } catch (err) {
-        console.log(error);
+        // Redirecione para a página de bebidas após o login bem-sucedido
+        res.redirect('/bebidas.html');
+
+    } catch (error) {
+        console.error(error);
         res.status(500).json({
-            msg: 'Infelizmente ocorreu um erro com o servidor, tente novamente mais tarde!'
+            msg: 'Ocorreu um erro no servidor, tente novamente mais tarde'
         });
     }
 });
