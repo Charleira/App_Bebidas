@@ -4,7 +4,9 @@ const app = express();
 const authRoutes = require('./authRoutes');
 const userRoutes = require('./userRoutes');
 const bodyParser = require('body-parser');
+var cors = require('cors')
 
+app.use(cors()) 
 app.use(express.static('public'));
 app.use(express.json()); // Used to parse JSON bodies
 app.use(express.urlencoded()); //Parse URL-encoded bodies

@@ -6,7 +6,7 @@ const { pool, connection } = require('./db'); // Assuming you have a database co
 
 // Register User
 router.post('/register', async (req, res) => {
-    const { nome, email, senha, confirmpassword, endereco, telefone } = req.body;
+    const { name, email, password, address, phone } = req.body;
 
     console.log(req.body)
     if (!email.includes("@") && !email.includes(".")) {
@@ -14,7 +14,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Validations
-    if (!nome) {
+    if (!name) {
         return res.status(422).json({ msg: 'O nome é obrigatório' });
     }
 
@@ -22,13 +22,10 @@ router.post('/register', async (req, res) => {
         return res.status(422).json({ msg: 'O email é obrigatório' });
     }
 
-    if (!senha) {
+    if (!password) {
         return res.status(422).json({ msg: 'A senha é obrigatória' });
     }
 
-    if (senha !== confirmpassword) {
-        return res.status(422).json({ msg: 'As senhas devem ser iguais' });
-    }
 
     // Check if user exists
     const [userRows] = await connection.promise().query('SELECT * FROM usuarios WHERE email = ?', [email]);
@@ -40,12 +37,12 @@ router.post('/register', async (req, res) => {
 
     // Create password hash
     const salt = await bcrypt.genSalt(12);
-    const passwordHash = await bcrypt.hash(senha, salt);
+    const passwordHash = await bcrypt.hash(password, salt);
 
     // Create user
     try {
-        await connection.promise().query('INSERT INTO usuarios (nome, email, senha, endereco, telefone) VALUES (?, ?, ?, ?, ?)', [nome, email, passwordHash, endereco, telefone]);
-        res.redirect('');
+        await connection.promise().query('INSERT INTO usuarios (nome, email, senha, endereco, telefone) VALUES (?, ?, ?, ?, ?)', [name, email, passwordHash, address, phone]);
+        res.status(201).send();
     } catch (error) {
         console.log(error);
         res.status(500).json({
@@ -98,6 +95,7 @@ router.post('/reset-password', async (req, res) => {
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
+
     if (!email || !password) {
         return res.status(422).json({ msg: 'E-mail e senha são obrigatórios' });
     }
@@ -114,6 +112,7 @@ router.post('/login', async (req, res) => {
         // Verifique se a senha corresponde
         const checkPassword = await bcrypt.compare(password, user.senha);
         if (!checkPassword) {
+            console.log("ta aqui", user);
             return res.status(404).json({ msg: 'Senha inválida' });
         }
 
@@ -122,10 +121,11 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign({ id: user.id }, secret);
 
         // Redirecione para a página de bebidas após o login bem-sucedido
-        res.redirect('/bebidas.html');
+        console.log({ accessToken: token, user: { id: user.id, name: user.nome, emai: user.email } });
+        res.json({ accessToken: token, user: { id: user.id, name: user.name, emai: user.email, permission: user.vendedor } });
 
     } catch (error) {
-        console.error(error);
+        console.log(error);
         res.status(500).json({
             msg: 'Ocorreu um erro no servidor, tente novamente mais tarde'
         });
@@ -133,64 +133,63 @@ router.post('/login', async (req, res) => {
 });
 //Lista de produtos
 router.get('/products', (req, res) => {
-    const sql = 'SELECT * FROM products';
-    dbConnection.query(sql, (err, results) => {
-       if (err) throw err;
-       res.json(results);
+    const sql = 'SELECT * FROM produtos';
+    const resp = connection.query(sql, (err, results) => {
+        if (err) throw err;
+        return res.json(results);
     });
-   });
+});
+router.get('/topProducts', (req, res) => {
+    const sql = 'SELECT * FROM produtos ORDER BY total_vendas DESC LIMIT 3';
+    const resp = connection.query(sql, (err, results) => {
+        if (err) throw err;
+        return res.json(results);
+    });
+});
 
 // Adicionar Produtos   
 router.post('/add-product', (req, res) => {
-    let product = req.body;
-    let sql = 'INSERT INTO products SET ?';
-    db.query(sql, product, (err, result) => {
-        if (err) throw err;
-        res.send('Product added...');
-    });
-    });
+    let { name, quantity, value, img, category } = req.body;
+    connection.promise().query('INSERT INTO produtos (nome, quantidade_estoque, categoria,valor, img) VALUES (?, ?, ?,?, ?)', [name, quantity, category, value, img]);
 
-// Adicionar ao carrinho
-router.post('/addToCart', async (req, res) => {
-    try {
-        // Access the product from the database
-        const product = await Product.findById(req.body.productId);
-
-        // Access the cart from the user's session
-        let cart = req.session.cart;
-
-        // If there is no cart, create an empty cart
-        if (!cart) {
-            cart = [];
-        }
-
-        // Add the product to the cart
-        let productInCart = cart.find(item => item.productId == req.body.productId);
-        if (productInCart) {
-            productInCart.quantity += req.body.quantity;
-        } else {
-            cart.push({ productId: req.body.productId, quantity: req.body.quantity });
-        }
-
-        // Update the session
-        req.session.cart = cart;
-
-        // Return a response to the client
-        res.json({ success: true });
-    } catch (err) {
-        res.json({ success: false, error: err.toString() });
-    }
+    res.status(201).send();
 });
-
+router.patch('/edit-product', (req, res) => {
+    let { id, name, quantity, category, value, img } = req.body;
+    connection.promise().query('UPDATE produtos SET nome = ?, quantidade_estoque = ?, categoria = ?, valor = ?, img = ? WHERE id = ?', [name, quantity, category, value, img, id])
+    res.status(204).send("")
+})
+router.post('/delete-product', (req, res) => {
+    let { id } = req.body;
+    connection.promise().query('DELETE FROM produtos  WHERE id = ?', [id])
+    res.status(200).send("")
+})
 //Adicionar Pedido
 router.post('/addOrder', (req, res) => {
-    const orderData = req.body;
-   
-    connection.query('INSERT INTO orders SET ?', orderData, (error, results, fields) => {
-       if (error) throw error;
-   
-       res.send({ message: 'Order added successfully!', data: results });
-    });
-   });
+    const { userId, total, description, } = req.body;
 
+    connection.promise().query('INSERT INTO pedidos (usuario_id, total,descricao) VALUES (?,?,?)', [userId, total, description]);
+    res.status(201).send();
+});
+router.get('/addOrder', (req, res) => {
+    const { userId, total, description, } = req.body;
+
+    connection.promise().query('INSERT INTO pedidos (usuario_id, total,descricao) VALUES (?,?,?)', [userId, total, description]);
+    res.status(201).send();
+});
+router.get('/getHistory/:id', (req, res) => {
+    const { id } = req.params;
+    const sql = 'SELECT pedidos.*, usuarios.nome, usuarios.endereco FROM pedidos JOIN usuarios ON pedidos.usuario_id = usuarios.id WHERE usuario_id = ?;';
+    const resp = connection.query(sql,[id], (err, results) => {
+        if (err) throw err;
+        return res.json(results);
+    });
+})
+router.get('/getHistorySeller', (req, res) => {
+    const sql = 'SELECT pedidos.*, usuarios.nome, usuarios.endereco FROM pedidos JOIN usuarios ON pedidos.usuario_id = usuarios.id;';
+    const resp = connection.query(sql, (err, results) => {
+        if (err) throw err;
+        return res.json(results);
+    });
+})
 module.exports = router;
