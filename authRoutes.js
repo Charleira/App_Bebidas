@@ -25,8 +25,7 @@ router.post('/register', async (req, res) => {
     if (!password) {
         return res.status(422).json({ msg: 'A senha é obrigatória' });
     }
-
-
+    
     // Check if user exists
     const [userRows] = await connection.promise().query('SELECT * FROM usuarios WHERE email = ?', [email]);
     const userExists = userRows[0];

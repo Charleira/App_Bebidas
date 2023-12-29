@@ -17,6 +17,10 @@ app.use('/auth', authRoutes);
 // Use the user routes
 app.use('/user', userRoutes);
 
+app.get('/get', (req, res) => {
+    res.send('TESTE')
+})
+
 module.exports = {
     app : app
 };
